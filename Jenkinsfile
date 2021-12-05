@@ -1,42 +1,29 @@
-def pipelin_var = "test_var"
-properties([pipelineTriggers([githubPush()])])
-
-pipeline{
-    agent {label 'slave--1'}
-    parameters {
-        choice (name: 'git_branch', choices: ["master", "dev", "UAT"])
-    }
-    stages{
-        stage('clone'){
-            steps{
-                git 'https://github.com/dineshmadivada55/applogin.git'
+pipeline {
+    agent {label 'ansible'}
+    stages {
+        stage ("clone") {
+            steps {
+                git url: 'https://github.com/tejesh555/applogin.git'
             }
         }
-        stage("build"){
-            steps{
+        stage ("build") {
+            steps {
                 sh "mvn clean install"
             }
         }
-        stage("test"){
-            steps{
-                script{
-                    try {
-                        println "this is for test"
-                        println "${pipelin_var}"
-                    }
-                    catch(err) {
-                        println "tere is some error"
-                     }
-                }
+        stage ("test") {
+            steps {
+                echo "test this is in master"
             }
         }
-        stage("publish"){
-            steps{
-                script{
-                    rtUpload(
-                        serverId: 'my-jfrog',
+        /*
+        stage ("publish") {
+            steps {
+                script {
+                    rtUpload (
+                        serverId: 'myjfrog',
                         spec: '''{
-                            "files":[
+                            "files": [
                                 {
                                 "pattern": "target/*.war",
                                 "target": "applogin"
@@ -47,21 +34,24 @@ pipeline{
                         buildNumber: "${BUILD_NUMBER}"
                     )
                 }
-
             }
-        }
-        stage("deploy"){
-            steps{
-                script{
-                    if ( "${git_branch}" != "master") {
-                        println "this is in master"
+        } */
+        stage ("deploy") {
+            steps {
+                script {
+                    sh "mkdir ansible"
+                    dir('ansible') {
+                        sh "pwd"
+                        git url: 'https://github.com/tejesh555/ansible2.git'
                     }
-                    else {
-                        "println this is wrong"
-                    }                    
-                    
+                    sh "ansible-playbook -i ansible/host ansible/e2e.yml"
                 }
-            }
+            }    
+        }
+    }
+    post { 
+        always { 
+            cleanWs()
         }
     }
 }
