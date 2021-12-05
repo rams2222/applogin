@@ -2,7 +2,7 @@ def pipelin_var = "test_var"
 properties([pipelineTriggers([githubPush()])])
 
 pipeline{
-    agent any
+    agent {label 'slave--1'}
     parameters {
         choice (name: 'git_branch', choices: ["master", "dev", "UAT"])
     }
